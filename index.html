@@ -3,9 +3,52 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Mapping</title>
+		<link href="https://unpkg.com/ionicons@4.5.10-0/dist/css/ionicons.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="./dist/bundle.css"/>
 	</head>
 	<body>
+		<div
+			id="overlay"
+			class="box">
+			<h1 class="is-size-2 has-text-centered">Mapping</h1>
+
+			<hr>
+			<h3 class="is-size-3">
+				<span class="icon is-normal">
+					<i class="ion-icon ion-md-compass"></i>
+				</span>
+				Vue
+			</h3>
+			<button
+				class="button is-small"
+				id="view__camera-reset">
+				Réinitialisation caméra <code>V</code>
+			</button>
+
+			<hr>
+			<h3 class="is-size-3">
+				<span class="icon is-normal">
+					<i class="ion-icon ion-md-analytics"></i>
+				</span>
+				Données
+			</h3>
+			<div class="field has-addons">
+				<p class="control">
+					<button
+						class="button is-small"
+						id="data__import-btn">
+						Importer <code>Shift+I</code>
+					</button>
+				</p>
+				<p class="control">
+					<button
+						class="button is-small"
+						id="data__export-btn">
+						Exporter<code>Shift+E</code>
+					</button>
+				</p>
+			</div>
+		</div>
 		<script src="dist/bundle.js"></script>
 	</body>
 </html>
