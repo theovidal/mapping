@@ -1,27 +1,29 @@
 import { terser } from 'rollup-plugin-terser'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
+import devServer from 'rollup-plugin-dev'
 import postcss from 'rollup-plugin-postcss'
+import typescript from '@rollup/plugin-typescript'
 
-const dev = process.env.ENV === 'dev'
-const prod = !dev
+const development = process.env.ENV === 'development'
+const production = !development
 
 export default {
-  input: 'src/main.js',
-  watch: prod ? false : {
+  input: 'src/main.ts',
+  watch: {
     exclude: 'node_modules/**'
   },
   plugins: [
-    nodeResolve(),
+    typescript(),
     postcss({
       extract: 'bundle.css',
-      minimize: prod
+      minimize: production
     }),
-    prod && terser()
+    development && devServer(),
+    production && terser()
   ],
   output: [
     {
       file: 'dist/bundle.js',
-      compact: prod,
+      compact: production,
       format: 'iife'
     }
   ]

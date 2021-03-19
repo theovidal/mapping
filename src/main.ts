@@ -1,9 +1,11 @@
-import { view, animate } from './view/main.js'
+import View from './view/main'
 
-import './css/main.styl'
+import '../node_modules/bulma/css/bulma.min.css'
+import './css/index.styl'
+import registerShortcuts from './ux/shortcuts'
 
 window.onload = () => {
-  view.initializeScene()
+  let view = new View()
   for (let i = 0; i < 5; i++) {
     for (let j = 0; j < 3; j++) {
       view.addPoint(i, j, 0)
@@ -15,6 +17,6 @@ window.onload = () => {
     }
   }
 
-  animate()
-  window.view = view
+  registerShortcuts(view)
+  view.animate()
 }
