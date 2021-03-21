@@ -1,28 +1,21 @@
+const { ipcRenderer } = window.require('electron')
 import View from '../view/main'
 
 const shortcuts: object = {
-  'KeyV': {
-    exec: (view: View) => view.resetCamera()
+  view: {
+    reset: (view: View) => view.resetCamera()
   },
-  'KeyE': {
-    shift: true,
-    exec: (view: View) => view.export()
+  data: {
+    export: (view: View) => view.export()
   }
 }
 
 function registerShortcuts(view: View) {
-  document.addEventListener('keyup', event => {
-    let handler = shortcuts[event.code]
-    if (handler !== undefined) {
-      if (
-        handler.control !== undefined && !event.ctrlKey
-        || handler.alt !== undefined && !event.altKey
-        || handler.shift !== undefined && !event.shiftKey
-      ) return
-
-      handler.exec(view)
+  for (let menu in shortcuts) {
+    for (let item in shortcuts[menu]) {
+      ipcRenderer.on(`${menu}__${item}`, () => shortcuts[menu][item](view))
     }
-  })
+  }
 }
 
 export default registerShortcuts

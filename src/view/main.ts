@@ -30,8 +30,8 @@ class View {
     window.onresize = this.setSize.bind(this)
     document.body.appendChild(this.renderer.domElement)
 
-    document.getElementById('data__export-btn').addEventListener('click', () => this.export())
-    document.getElementById('view__camera-reset').addEventListener('click', () => this.resetCamera())
+    /*document.getElementById('data__export-btn').addEventListener('click', () => this.export())
+    document.getElementById('view__camera-reset').addEventListener('click', () => this.resetCamera())*/
   }
 
   setSize() {
@@ -61,11 +61,9 @@ class View {
   }
 
   export() {
-    document.getElementById('data__export-btn').textContent = 'Patientez...'
     const exporter = new OBJExporter()
     const result = exporter.parse(this.scene)
     download('mapping.obj', 'text/plain', result)
-    document.getElementById('data__export-btn').textContent = 'Exporter'
   }
 }
 
