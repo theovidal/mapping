@@ -1,8 +1,7 @@
 import View from './view/main'
-const { ipcRenderer } = window.require('electron')
 import '../node_modules/bulma/css/bulma.min.css'
 import './css/index.styl'
-import registerShortcuts from './ux/shortcuts'
+import registerIpcChannels from './ipc'
 
 window.onload = () => {
   let view = new View()
@@ -17,7 +16,6 @@ window.onload = () => {
     }
   }
 
-  ipcRenderer.on(`view__reset`, () => console.log('hey'))
-  registerShortcuts(view)
+  registerIpcChannels(view)
   view.animate()
 }
