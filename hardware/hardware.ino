@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 SoftwareSerial XBee(2, 3);
 
-float count = -2.2;
+float count = -15;
 float x = 0;
 float y = 0;
 float z = 0;

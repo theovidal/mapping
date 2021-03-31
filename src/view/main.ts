@@ -3,6 +3,16 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter'
 import download from '../utils/filesystem'
 
+interface Options {
+  liveRender: boolean
+}
+
+const defaultOptions = {
+  liveRender: true
+}
+
+let pointsPool: Array<THREE.Mesh> = []
+
 class View {
   scene: THREE.Scene
   camera: THREE.PersectiveCamera
@@ -11,6 +21,7 @@ class View {
 
   geometry: THREE.SphereGeometry
   material: THREE.MeshBasicMaterial
+  options: Options
 
   constructor() {
     this.scene = new THREE.Scene()
@@ -18,9 +29,11 @@ class View {
     this.renderer = new THREE.WebGLRenderer()
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 
+    this.options = Object.assign({}, defaultOptions)
+
     this.scene.add(new THREE.AxesHelper(5))
 
-    this.geometry = new THREE.SphereGeometry(0.5, 128, 128)
+    this.geometry = new THREE.SphereGeometry(0.5, 22, 22)
     this.material = new THREE.MeshBasicMaterial({
       color: 0xf4f4f4,
     })
@@ -49,9 +62,20 @@ class View {
   }
 
   addPoint(x, y, z: Number) {
-    const sphere = new THREE.Mesh(this.geometry, this.material)
-    sphere.position.set(x, y, z)
-    this.scene.add(sphere)
+    const point = new THREE.Mesh(this.geometry, this.material)
+    point.position.set(x, y, z)
+    if (this.options.liveRender) this.scene.add(point)
+    else pointsPool.push(point)
+  }
+
+  toggleLive(liveRender: boolean) {
+    this.options.liveRender = liveRender
+    this.update()
+  }
+
+  update() {
+    pointsPool.forEach(point => this.scene.add(point))
+    pointsPool = []
   }
 
   animate() {

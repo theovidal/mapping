@@ -24,36 +24,40 @@ serialPort.on('open', function() {
   console.log('Serial port open')
 })
 
-serialPort.on('data', function(buffer) {
-  let coordinates = [0, 0, 0]
+function registerXbee(window) {
+  serialPort.on('data', function(buffer) {
+    let coordinates = [0, 0, 0]
 
-  if (pool.totalLength !== 14) {
-    pool.buffers.push(buffer)
-    pool.totalLength += buffer.length
+    if (pool.totalLength !== 14) {
+      pool.buffers.push(buffer)
+      pool.totalLength += buffer.length
 
-    if (pool.totalLength > 14) pool.reset()
-    if (pool.totalLength !== 14) return
-  }
-
-  let data = Buffer.concat(pool.buffers)
-
-  let coordinateIndex = 0
-  for (let i = 1; i <= 12; i += 4) {
-    let ent = (data[i] << 8) | data[i+1]
-    let dec = (data[i+2] << 8) | data[i+3]
-    let negative = false
-
-    if (ent > 32767) {
-      ent = 65536 - ent
-      negative = true
+      if (pool.totalLength > 14) pool.reset()
+      if (pool.totalLength !== 14) return
     }
-    let coordinate = ent + (dec / 1000)
-    if (negative) coordinate *= -1
-    coordinates[coordinateIndex] = coordinate
 
-    coordinateIndex++
-  }
+    let data = Buffer.concat(pool.buffers)
 
-  pool.reset()
-  console.log(coordinates)
-})
+    let coordinateIndex = 0
+    for (let i = 1; i <= 12; i += 4) {
+      let ent = (data[i] << 8) | data[i+1]
+      let dec = (data[i+2] << 8) | data[i+3]
+      let negative = false
+
+      if (ent > 32767) {
+        ent = 65536 - ent
+        negative = true
+      }
+      let coordinate = ent + (dec / 1000)
+      if (negative) coordinate *= -1
+      coordinates[coordinateIndex] = coordinate
+
+      coordinateIndex++
+    }
+
+    pool.reset()
+    window.webContents.send('data__addPoint', coordinates)
+  })
+}
+
+module.exports = { registerXbee }

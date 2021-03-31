@@ -1,4 +1,5 @@
 .idea
+hardware/cmake*
 
 node_modules
 *.log

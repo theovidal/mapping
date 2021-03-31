@@ -2,12 +2,14 @@ const { ipcRenderer } = window.require('electron')
 import View from './view/main'
 
 const channels: object = {
-  view: {
-    reset: (view: View) => view.resetCamera()
+  render: {
+    toggleLive: (view: View, liveRender: boolean) => view.toggleLive(liveRender),
+    update: (view: View, _) => view.update(),
+    reset: (view: View, _) => view.resetCamera()
   },
   data: {
-    addPoint: (_: View, arg: string) => console.log(arg),
-    export: (view: View, _: string) => view.export()
+    addPoint: (view: View, arg: Array<Number>) => view.addPoint(arg[0], arg[1], arg[2]),
+    export: (view: View, _) => view.export()
   }
 }
 

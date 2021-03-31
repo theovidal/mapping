@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Menu } = require('electron')
 const getMenu = require('./menu')
-require ('./xbee')
+const { registerXbee } = require('./xbee')
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -14,6 +14,7 @@ function createWindow() {
   })
 
   Menu.setApplicationMenu(getMenu(win))
+  registerXbee(win)
 
   if (process.env.ENV === 'development') {
     win.loadURL('http://localhost:8080')
