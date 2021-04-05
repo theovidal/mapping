@@ -36,8 +36,6 @@ function registerXbee(window) {
         pool.buffers.push(buffer)
         pool.totalLength += buffer.length
 
-        console.log(pool.totalLength)
-
         if (pool.totalLength > 14) pool.reset()
         if (pool.totalLength !== 14) return
       }
