@@ -31,7 +31,7 @@ class View {
 
     this.options = Object.assign({}, defaultOptions)
 
-    this.scene.add(new THREE.AxesHelper(5))
+    this.scene.add(new THREE.AxesHelper(25))
 
     this.geometry = new THREE.SphereGeometry(0.5, 22, 22)
     this.material = new THREE.MeshBasicMaterial({
