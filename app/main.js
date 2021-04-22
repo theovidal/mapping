@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu } = require('electron')
 const getMenu = require('./menu')
 const { registerXbee } = require('./xbee')
+require('./ipc')
 
 function createWindow() {
   const win = new BrowserWindow({

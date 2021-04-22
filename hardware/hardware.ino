@@ -8,6 +8,9 @@ SoftwareSerial xbee(2, 3);
 Servo servo_body;
 Servo servo_lidar;
 
+int const servo_body_port = 9;
+int const servo_lidar_port = 10;
+
 int const lidarMode = 4;
 
 int distance = 0;
@@ -57,7 +60,7 @@ void sendData() {
 }
 
 void getCoordinates() {
-  distance = lidar.distance() + 5;
+  distance = lidar.distance() + 3;
   rad_lidar = degToRad(deg_lidar);
   rad_body = degToRad(deg_body);
   
@@ -72,8 +75,8 @@ void setup() {
   xbee.begin(9600);
   lidar.begin(lidarMode, true);
 
-  servo_body.attach(9);
-  servo_lidar.attach(10);
+  servo_body.attach(servo_body_port);
+  servo_lidar.attach(servo_lidar_port);
 }
 
 void loop() {
