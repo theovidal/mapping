@@ -4,6 +4,7 @@ import View from './view/main'
 const channels: object = {
   render: {
     toggleLive: (view: View, liveRender: boolean) => view.toggleLive(liveRender),
+    toggleQuickhull: (view: View, quickHull: boolean) => view.options.quickhullRender = quickHull,
     update: (view: View, _) => view.update(),
     resetCamera: (view: View, _) => view.resetCamera(),
     clear: (view: View, _) => view.clear()
@@ -14,7 +15,20 @@ const channels: object = {
     export: (view: View, _) => view.export()
   },
   calculate: {
-    surface: (view: View, _) => ipcRenderer.send('showDialog', view.calculateSurface())
+    surface: (view: View, _) => {
+      const surface = view.calculateSurface()
+      if (surface > 0) ipcRenderer.send('showDialog', {
+        title: 'Surface totale (approximation)',
+        message: `${surface} cm²`
+      })
+    },
+    volume: (view: View, _) => {
+      const volume = view.calculateVolume()
+      if (volume > 0) ipcRenderer.send('showDialog', {
+        title: 'Volume total (approximation)',
+        message: `${volume} cm³`
+      })
+    }
   }
 }
 

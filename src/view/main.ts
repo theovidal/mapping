@@ -3,14 +3,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry'
 import { SceneUtils } from 'three/examples/jsm/utils/SceneUtils'
 import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter'
+const { ipcRenderer } = window.require('electron')
 import download from '../utils/filesystem'
 
 interface Options {
-  liveRender: boolean
+  liveRender: boolean,
+  quickhullRender: boolean
 }
 
 const defaultOptions = {
-  liveRender: true
+  liveRender: true,
+  quickhullRender: false
 }
 
 let pointsPool: Array<THREE.Mesh> = []
@@ -28,6 +31,7 @@ class View {
   exporter: PLYExporter
 
   points: Array<Array<Number>> = []
+  vertices: Array<THREE.Vector3> = []
 
   constructor() {
     this.scene = new THREE.Scene()
@@ -49,9 +53,6 @@ class View {
     this.setSize()
     window.onresize = this.setSize.bind(this)
     document.body.appendChild(this.renderer.domElement)
-
-    /*document.getElementById('data__export-btn').addEventListener('click', () => this.export())
-    document.getElementById('view__camera-reset').addEventListener('click', () => this.resetCamera())*/
   }
 
   setSize() {
@@ -70,6 +71,8 @@ class View {
 
   addPoint(x, y, z: Number) {
     this.points.push([x, y, z])
+    this.vertices.push(new THREE.Vector3(x, y, z))
+
     const point = new THREE.Mesh(this.geometry, this.material)
     point.position.set(x, y, z)
     if (this.options.liveRender) this.scene.add(point)
@@ -110,6 +113,7 @@ class View {
       this.scene.remove(obj)
     }
     this.points = []
+    this.vertices = []
   }
 
   import(data: string) {
@@ -130,26 +134,37 @@ class View {
     download('mapping.ply', 'text/plain', result)*/
   }
 
+  createConvexGeometry(): ConvexGeometry {
+    if (this.points.length < 4) {
+      ipcRenderer.send('showErrorDialog', {
+        title: 'Erreur de calcul',
+        message: 'Le rendu doit comporter au moins 4 points'
+      })
+      return undefined
+    }
+
+    const geometry = new ConvexGeometry(this.vertices)
+    if (this.options.quickhullRender) {
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        opacity: 0.7,
+        transparent: true
+      })
+      let wireFrameMat = new THREE.MeshBasicMaterial()
+      wireFrameMat.wireframe = true
+
+      let mesh = SceneUtils.createMultiMaterialObject(geometry, [material, wireFrameMat])
+      this.scene.add(mesh)
+    }
+    return geometry
+  }
+
   calculateSurface(): Number {
-    let vertices: Array<THREE.Vector3> = []
-    this.points.forEach(point => vertices.push(new THREE.Vector3(point[0], point[1], point[2])))
+    const geometry = this.createConvexGeometry()
+    if (geometry === undefined) return -1
 
-    // Creating the ConvexGeometry and the materials (faces + edges)
-    const geometry = new ConvexGeometry(vertices)
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      opacity: 0.7,
-      transparent: true
-    })
-    let wireFrameMat = new THREE.MeshBasicMaterial()
-    wireFrameMat.wireframe = true
-
-    let mesh = SceneUtils.createMultiMaterialObject(geometry, [material, wireFrameMat])
-    this.scene.add(mesh)
-
-    // Calculating the total surface based on all the vertices
     const position = geometry.getAttribute('position')
-    let totalSurface = 0
+    let surface = 0
 
     for (let i = 0; i < position.array.length; i += 9) {
       const xA = position.array[i]
@@ -170,10 +185,28 @@ class View {
 
       const p = (ab + bc + ac)/2
 
-      totalSurface += Math.sqrt(p * (p - ab) * (p - bc) * (p - ac))
+      surface += Math.sqrt(p * (p - ab) * (p - bc) * (p - ac))
     }
 
-    return totalSurface
+    return surface
+  }
+
+  calculateVolume(): Number {
+    const geometry = this.createConvexGeometry()
+    if (geometry === undefined) return -1
+
+    const position = geometry.getAttribute('position')
+    let volume = 0
+
+    for (let i = 0; i < position.array.length; i += 9) {
+      const v1 = new THREE.Vector3(position.array[i], position.array[i + 1], position.array[i + 2])
+      const v2 = new THREE.Vector3(position.array[i + 3], position.array[i + 4], position.array[i + 5])
+      const v3 = new THREE.Vector3(position.array[i + 6], position.array[i + 7], position.array[i + 8])
+
+      volume += v1.cross(v2).dot(v3)
+    }
+
+    return volume/6
   }
 }
 
