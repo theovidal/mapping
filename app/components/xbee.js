@@ -1,10 +1,14 @@
-const { dialog } = require('electron')
-let SerialPort = require('serialport')
-let xbee_api = require('xbee-api')
+const { dialog, Notification } = require('electron')
+const SerialPort = require('serialport')
+const xbee = require('xbee-api')
+const AsyncLock = require('async-lock')
 
-let AsyncLock = require('async-lock')
+const parser = new xbee.XBeeAPI({
+  raw_frames: true
+})
+
+let serialPort = undefined
 let lock = new AsyncLock()
-
 let pool = {
   buffers: [],
   totalLength: 0,
@@ -15,11 +19,6 @@ let pool = {
   }
 }
 
-let xbeeAPI = new xbee_api.XBeeAPI({
-  raw_frames: true
-})
-
-let serialPort = undefined
 function registerSerialPort(window, port) {
   if (serialPort !== undefined) {
     serialPort.close()
@@ -27,11 +26,22 @@ function registerSerialPort(window, port) {
 
   serialPort = new SerialPort(port, {
     baudRate: 9600,
-    parser: xbeeAPI.rawParser()
+    parser: parser.rawParser()
   })
 
   serialPort.on('open', function() {
-    console.log('Serial port open')
+    new Notification({
+      title: 'Port série ouvert',
+      body: `Le module de communication sans fil Xbee est connecté sur le port ${port}`
+    }).show()
+  })
+
+  serialPort.on('close', function() {
+    new Notification({
+      title: 'Port série fermé',
+      body: `Le module de communication sans fil Xbee est déconnecté du port ${port}`
+    }).show()
+    serialPort = undefined
   })
 
   serialPort.on('error', err => dialog.showErrorBox('Erreur lors de la communication avec le port série', err.message))
@@ -52,15 +62,16 @@ function registerSerialPort(window, port) {
 
       let coordinateIndex = 0
       for (let i = 1; i <= 12; i += 4) {
-        let ent = (data[i] << 8) | data[i+1]
-        let dec = (data[i+2] << 8) | data[i+3]
-        let negative = false
+        let integral = (data[i] << 8) | data[i+1]
+        let decimal = (data[i+2] << 8) | data[i+3]
 
-        if (ent > 32767) {
-          ent = 65536 - ent
+        let negative = false
+        if (integral > 32767) {
+          integral = 65536 - integral
           negative = true
         }
-        let coordinate = ent + (dec / 1000)
+
+        let coordinate = integral + (decimal / 1000)
         if (negative) coordinate *= -1
         coordinates[coordinateIndex] = coordinate
 

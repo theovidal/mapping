@@ -3,11 +3,11 @@ import devServer from 'rollup-plugin-dev'
 import postcss from 'rollup-plugin-postcss'
 import typescript from '@rollup/plugin-typescript'
 
-const development = process.env.ENV === 'development'
+const development = process.env.ENV === 'dev'
 const production = !development
 
 export default {
-  input: 'src/main.ts',
+  input: 'renderer/main.ts',
   watch: {
     exclude: 'node_modules/**'
   },

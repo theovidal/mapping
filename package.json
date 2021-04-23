@@ -1,14 +1,14 @@
 {
   "name": "mapping",
   "version": "1.0.0",
-  "description": "Engineering project",
+  "description": "🔦 3D mapping using a LiDAR scanner (Engineering project)",
   "main": "app/main.js",
   "repository": "https://github.com/theovidal/mapping",
   "private": true,
   "scripts": {
-    "start": "SET \"ENV=development\" && electron .",
+    "start": "SET \"ENV=dev\" && electron .",
     "make": "electron-forge make",
-    "dev": "SET \"ENV=development\" && rollup -c -w",
+    "dev": "SET \"ENV=dev\" && rollup -c -w",
     "build": "rollup -c"
   },
   "devDependencies": {

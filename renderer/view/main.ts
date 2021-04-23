@@ -2,21 +2,23 @@ import * as THREE from 'three/src/Three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry'
 import { SceneUtils } from 'three/examples/jsm/utils/SceneUtils'
-import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter'
+
 const { ipcRenderer } = window.require('electron')
+
 import download from '../utils/filesystem'
+import { getVertices } from '../utils/vectors'
 
 interface Options {
-  liveRender: boolean,
-  quickhullRender: boolean
+  liveRendering: boolean,
+  quickhullRendering: boolean
 }
 
 const defaultOptions = {
-  liveRender: true,
-  quickhullRender: false
+  liveRendering: true,
+  quickhullRendering: false
 }
 
-let pointsPool: Array<THREE.Mesh> = []
+let verticesPool: Array<THREE.Vector3> = []
 
 class View {
   scene: THREE.Scene
@@ -28,9 +30,6 @@ class View {
   material: THREE.MeshBasicMaterial
   options: Options
 
-  exporter: PLYExporter
-
-  points: Array<Array<Number>> = []
   vertices: Array<THREE.Vector3> = []
 
   constructor() {
@@ -40,7 +39,6 @@ class View {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
 
     this.options = Object.assign({}, defaultOptions)
-    this.exporter = new PLYExporter()
 
     this.scene.add(new THREE.AxesHelper(25))
 
@@ -51,6 +49,7 @@ class View {
 
     this.resetCamera()
     this.setSize()
+
     window.onresize = this.setSize.bind(this)
     document.body.appendChild(this.renderer.domElement)
   }
@@ -70,15 +69,29 @@ class View {
   }
 
   addPoint(x, y, z: Number) {
-    this.points.push([x, y, z])
-    this.vertices.push(new THREE.Vector3(x, y, z))
+    let vertices: THREE.Vector3 = new THREE.Vector3(x, y, z)
+    this.vertices.push(vertices)
 
+    if (this.options.liveRendering) this.renderPoint(vertices)
+    else verticesPool.push(vertices)
+  }
+
+  toggleLiveRendering(liveRendering: boolean) {
+    this.options.liveRendering = liveRendering
+    this.update()
+  }
+
+  update() {
+    verticesPool.forEach(vertices => this.renderPoint(vertices))
+    verticesPool = []
+  }
+
+  renderPoint(vertices: THREE.Vector3) {
     const point = new THREE.Mesh(this.geometry, this.material)
-    point.position.set(x, y, z)
-    if (this.options.liveRender) this.scene.add(point)
-    else pointsPool.push(point)
+    point.position.set(...vertices.toArray())
+    this.scene.add(point)
 
-    /*const pointsMaterial = new THREE.PointsMaterial({
+    /* const pointsMaterial = new THREE.PointsMaterial({
       color: 0x0080ff,
       size: 1,
       alphaTest: 0.5
@@ -86,17 +99,7 @@ class View {
 
     const pointsGeometry = new THREE.BufferGeometry().setFromPoints(vertices)
     const points = new THREE.Points(pointsGeometry, pointsMaterial)
-    view.scene.add(points)*/
-  }
-
-  toggleLive(liveRender: boolean) {
-    this.options.liveRender = liveRender
-    this.update()
-  }
-
-  update() {
-    pointsPool.forEach(point => this.scene.add(point))
-    pointsPool = []
+    view.scene.add(points) */
   }
 
   animate() {
@@ -112,12 +115,14 @@ class View {
       if (obj.type === 'AxesHelper') continue
       this.scene.remove(obj)
     }
-    this.points = []
     this.vertices = []
+    verticesPool = []
   }
 
   import(data: string) {
     data.split('\n').forEach(point => {
+      if (point.length < 5) return
+
       let coordinates: Array<Number> = point.split(' ').map(value => parseFloat(value))
       this.addPoint(coordinates[0], coordinates[1], coordinates[2])
     })
@@ -125,17 +130,15 @@ class View {
 
   export() {
     let content = ''
-    this.points.forEach(point => {
-      content += point.join(" ") + "\n"
-    })
+    this.vertices.forEach(point => content += point.toArray().join(" ") + "\n")
     download('mapping.txt', 'text/plain', content)
 
-    /*const result = this.exporter.parse(this.scene)
-    download('mapping.ply', 'text/plain', result)*/
+    /* const result = this.exporter.parse(this.scene)
+    download('mapping.ply', 'text/plain', result) */
   }
 
   createConvexGeometry(): ConvexGeometry {
-    if (this.points.length < 4) {
+    if (this.vertices.length < 4) {
       ipcRenderer.send('showErrorDialog', {
         title: 'Erreur de calcul',
         message: 'Le rendu doit comporter au moins 4 points'
@@ -144,10 +147,10 @@ class View {
     }
 
     const geometry = new ConvexGeometry(this.vertices)
-    if (this.options.quickhullRender) {
+    if (this.options.quickhullRendering) {
       const material = new THREE.MeshBasicMaterial({
         color: 0xffffff,
-        opacity: 0.7,
+        opacity: 0.6,
         transparent: true
       })
       let wireFrameMat = new THREE.MeshBasicMaterial()
@@ -159,54 +162,45 @@ class View {
     return geometry
   }
 
-  calculateSurface(): Number {
+  calculateSurface() {
     const geometry = this.createConvexGeometry()
-    if (geometry === undefined) return -1
+    if (geometry === undefined) return
 
     const position = geometry.getAttribute('position')
     let surface = 0
 
     for (let i = 0; i < position.array.length; i += 9) {
-      const xA = position.array[i]
-      const yA = position.array[i + 1]
-      const zA = position.array[i + 2]
-
-      const xB = position.array[i + 3]
-      const yB = position.array[i + 4]
-      const zB = position.array[i + 5]
-
-      const xC = position.array[i + 6]
-      const yC = position.array[i + 7]
-      const zC = position.array[i + 8]
-
-      const ab = Math.sqrt((xB - xA)**2 + (yB - yA)**2 + (zB - zA)**2)
-      const bc = Math.sqrt((xB - xC)**2 + (yB - yC)**2 + (zB - zC)**2)
-      const ac = Math.sqrt((xC - xA)**2 + (yC - yA)**2 + (zC - zA)**2)
-
+      const v = getVertices(position.array, i)
+      const ab = v[0].distanceTo(v[1])
+      const bc = v[1].distanceTo(v[2])
+      const ac = v[0].distanceTo(v[2])
       const p = (ab + bc + ac)/2
 
       surface += Math.sqrt(p * (p - ab) * (p - bc) * (p - ac))
     }
 
-    return surface
+    ipcRenderer.send('showDialog', {
+      title: 'Surface totale (approximation)',
+      message: `${surface} cm²`
+    })
   }
 
-  calculateVolume(): Number {
+  calculateVolume() {
     const geometry = this.createConvexGeometry()
-    if (geometry === undefined) return -1
+    if (geometry === undefined) return
 
     const position = geometry.getAttribute('position')
     let volume = 0
 
     for (let i = 0; i < position.array.length; i += 9) {
-      const v1 = new THREE.Vector3(position.array[i], position.array[i + 1], position.array[i + 2])
-      const v2 = new THREE.Vector3(position.array[i + 3], position.array[i + 4], position.array[i + 5])
-      const v3 = new THREE.Vector3(position.array[i + 6], position.array[i + 7], position.array[i + 8])
-
-      volume += v1.cross(v2).dot(v3)
+      const v = getVertices(position.array, i)
+      volume += v[0].cross(v[1]).dot(v[2])
     }
 
-    return volume/6
+    ipcRenderer.send('showDialog', {
+      title: 'Volume total (approximation)',
+      message: `${volume/6} cm³`
+    })
   }
 }
 

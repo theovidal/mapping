@@ -26,7 +26,7 @@ function registerMenu(win) {
           label: 'En temps réel',
           type: 'checkbox',
           checked: true,
-          click: (item) => { win.webContents.send('render__toggleLive', item.checked) }
+          click: (item) => { win.webContents.send('render__toggleLiveRendering', item.checked) }
         },
         {
           label: 'Actualiser',
@@ -59,17 +59,11 @@ function registerMenu(win) {
           label: 'Aperçu du Quickhull',
           type: 'checkbox',
           checked: false,
-          click: (item) => { win.webContents.send('render__toggleQuickhull', item.checked) }
+          click: (item) => { win.webContents.send('render__toggleQuickhullRendering', item.checked) }
         },
         { type: 'separator' },
-        {
-          label: 'Surface totale',
-          click: () => { win.webContents.send('calculate__surface')}
-        },
-        {
-          label: 'Volume total',
-          click: () => { win.webContents.send('calculate__volume')}
-        }
+        { label: 'Surface totale', click: () => { win.webContents.send('calculate__surface')} },
+        { label: 'Volume total', click: () => { win.webContents.send('calculate__volume')} }
       ]
     }
   ]

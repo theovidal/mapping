@@ -3,26 +3,6 @@ const SerialPort = require('serialport')
 const fs = require('fs')
 const { registerSerialPort } = require('../components/xbee')
 
-let actualPort = ''
-function selectPort(win) {
-  SerialPort.list().then(
-    ports => {
-      const choice = dialog.showMessageBoxSync({
-        title: 'Choix du port série',
-        message: "Sélectionnez un port série ci-dessous. Si le port souhaité n'apparait pas, vérifier son branchement et son bon fonctionnement.",
-        buttons: [
-          'Annuler',
-          ...ports.map(port => `${port.path} : ${port.manufacturer} ${actualPort === port.path ? '(Actuel)' : ''}`)
-        ]
-      })
-      if (choice === 0) return
-      actualPort = ports[choice - 1].path
-      registerSerialPort(win, actualPort)
-    },
-    err => dialog.showErrorBox('Erreur dans la détection des ports série', err)
-  )
-}
-
 function getFileMenu(win) {
   return {
     label: 'Fichier',
@@ -49,6 +29,26 @@ function getFileMenu(win) {
   }
 }
 
+let actualPort = ''
+function selectPort(win) {
+  SerialPort.list().then(
+    ports => {
+      const choice = dialog.showMessageBoxSync({
+        title: 'Choix du port série',
+        message: "Sélectionnez un port série ci-dessous. Si le port souhaité n'apparait pas, vérifier son branchement et son bon fonctionnement. Vous pouvez également effectuer des tests sur le module avec le logiciel XCTU.",
+        buttons: [
+          'Annuler',
+          ...ports.map(port => `${port.path} : ${port.manufacturer} ${actualPort === port.path ? '(Actuel)' : ''}`)
+        ]
+      })
+      if (choice === 0) return
+      actualPort = ports[choice - 1].path
+      registerSerialPort(win, actualPort)
+    },
+    err => dialog.showErrorBox('Erreur dans la détection des ports série', err)
+  )
+}
+
 function openFile(win) {
   let paths = dialog.showOpenDialogSync({
     properties: ['openFile'],
@@ -69,4 +69,4 @@ function openFile(win) {
   })
 }
 
-module.exports = { getFileMenu, listPorts: selectPort }
+module.exports = { getFileMenu }

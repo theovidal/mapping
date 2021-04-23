@@ -99,15 +99,4 @@ void loop() {
   }
 
   servo_body.write(0);
-  
-  /*for (int i = 0; i < 100; i++) {
-    for (int j = 0; j < 20; j++) {
-      sendData(i, j, 0);
-    }
-  }
-  for (int i = 0; i < 100; i++) {
-    for (int j = 0; j < 20; j++) {
-      sendData(0, j, i);
-    }
-  }*/
 }

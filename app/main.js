@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron')
+
 const registerMenu = require('./menu')
 require('./components/ipc')
 
@@ -15,7 +16,7 @@ function createWindow() {
 
   registerMenu(win)
 
-  if (process.env.ENV === 'development') {
+  if (process.env.ENV === 'dev') {
     win.loadURL('http://localhost:8080')
   } else {
     win.loadFile('index.html')
