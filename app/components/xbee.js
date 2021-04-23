@@ -1,3 +1,4 @@
+const { dialog } = require('electron')
 let SerialPort = require('serialport')
 let xbee_api = require('xbee-api')
 
@@ -18,16 +19,23 @@ let xbeeAPI = new xbee_api.XBeeAPI({
   raw_frames: true
 })
 
-let serialPort = new SerialPort('COM3', {
-  baudRate: 9600,
-  parser: xbeeAPI.rawParser()
-})
+let serialPort = undefined
+function registerSerialPort(window, port) {
+  if (serialPort !== undefined) {
+    serialPort.close()
+  }
 
-serialPort.on('open', function() {
-  console.log('Serial port open')
-})
+  serialPort = new SerialPort(port, {
+    baudRate: 9600,
+    parser: xbeeAPI.rawParser()
+  })
 
-function registerXbee(window) {
+  serialPort.on('open', function() {
+    console.log('Serial port open')
+  })
+
+  serialPort.on('error', err => dialog.showErrorBox('Erreur lors de la communication avec le port série', err.message))
+
   lock.acquire('data', (done) => {
     serialPort.on('data', function(buffer) {
       let coordinates = [0, 0, 0]
@@ -66,4 +74,4 @@ function registerXbee(window) {
   })
 }
 
-module.exports = { registerXbee }
+module.exports = { registerSerialPort }
