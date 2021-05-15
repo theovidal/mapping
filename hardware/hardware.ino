@@ -13,16 +13,16 @@ int const servo_lidar_port = 10;
 
 int const lidarMode = 4;
 
-int distance = 0;
+float distance = 0;
 
 int deg_body = 0;
 int deg_lidar = 0;
 float rad_body = 0;
 float rad_lidar = 0;
 
-int x_stack[181] = {};
-int y_stack[181] = {};
-int z_stack[181] = {};
+float x_stack[181] = {};
+float y_stack[181] = {};
+float z_stack[181] = {};
 
 float degToRad(int n) {
   return n * PI / 180;
@@ -35,6 +35,8 @@ void getParts(float n, int *en, int *dec) {
 
 void sendData() {
   for (int deg = 0; deg <= 180; deg++) {
+    Serial.println(deg);
+    Serial.println(x_stack[deg]);
     int x_en, x_dec;
     getParts(x_stack[deg], &x_en, &x_dec);
   
@@ -62,7 +64,7 @@ void sendData() {
 }
 
 void getCoordinates() {
-  distance = lidar.distance() - 1;
+  distance = (float)(lidar.distance()) - 1.0;
   rad_lidar = degToRad(deg_lidar);
   rad_body = degToRad(deg_body);
   
@@ -87,11 +89,12 @@ void loop() {
     
     for (deg_lidar = 0; deg_lidar <= 180; deg_lidar++) {
       servo_lidar.write(deg_lidar);
-      delay(15);
+      delay(20);
       getCoordinates();
     }
     
     servo_lidar.write(0);
+    delay(300);
     sendData();
   }
 
