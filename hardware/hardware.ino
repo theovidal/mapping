@@ -35,8 +35,6 @@ void getParts(float n, int *en, int *dec) {
 
 void sendData() {
   for (int deg = 0; deg <= 180; deg++) {
-    Serial.println(deg);
-    Serial.println(x_stack[deg]);
     int x_en, x_dec;
     getParts(x_stack[deg], &x_en, &x_dec);
   
