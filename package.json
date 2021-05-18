@@ -1,6 +1,6 @@
 {
   "name": "mapping",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "🔦 3D mapping using a LiDAR scanner (Engineering project)",
   "main": "app/main.js",
   "repository": "https://github.com/theovidal/mapping",
