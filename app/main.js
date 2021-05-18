@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, dialog, BrowserWindow } = require('electron')
 
 const registerMenu = require('./menu')
 require('./components/ipc')
@@ -7,7 +7,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
-    icon: 'assets/carriat.png',
+    title: 'Mapping 3D',
+    icon: 'build/icon.png',
 
     webPreferences: {
       nodeIntegration: true
@@ -21,6 +22,19 @@ function createWindow() {
   } else {
     win.loadFile('index.html')
   }
+
+  win.on('close', function(e){
+    let choice = dialog.showMessageBoxSync(this,
+      {
+        type: 'question',
+        buttons: ['Confirmer', 'Annuler'],
+        title: "Fermer l'application",
+        message: "Êtes-vous sûrs de quitter l'application ? Veillez à enregistrer le mapping via la commande Fichier > Exporter (vous pourrez réimporter votre travail à tout moment par la commande Importer)."
+     })
+     if (choice === 1) {
+       e.preventDefault()
+     }
+  })
 }
 
 app.whenReady().then(() => {

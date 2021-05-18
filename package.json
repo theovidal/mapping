@@ -6,10 +6,10 @@
   "repository": "https://github.com/theovidal/mapping",
   "private": true,
   "scripts": {
+    "postinstall": "electron-builder install-app-deps",
     "start": "SET \"ENV=dev\" && electron .",
-    "make": "electron-forge make",
     "dev": "SET \"ENV=dev\" && rollup -c -w",
-    "build": "rollup -c"
+		"build": "rollup -c"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.54",
@@ -17,6 +17,7 @@
     "async-lock": "^1.2.8",
     "bulma": "^0.9.2",
     "electron": "^11.0.0",
+    "electron-builder": "^22.10.5",
     "electron-rebuild": "^2.3.5",
     "postcss": "^8.2.8",
     "rollup": "^2.41.4",
@@ -31,5 +32,23 @@
   "dependencies": {
     "serialport": "^9.0.7",
     "xbee-api": "^0.6.0"
-  }
+  },
+  "build": {
+		"appId": "com.carriat.mapping",
+		"productName": "Mapping",
+    "copyright": "Copyright © 2021-present Théo VIDAL, Kylian CAPITANIO",
+		"mac": {
+			"category": "public.app-category.developer-tools"
+		},
+		"dmg": {
+			"icon": false
+		},
+		"linux": {
+			"target": ["AppImage", "tar.gz", "tar.bz2"],
+			"category": "Science"
+		},
+    "win": {
+      "target": ["nsis", "portable", "zip"]
+    }
+	}
 }
