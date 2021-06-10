@@ -11,7 +11,7 @@ Servo servo_lidar;
 int const servo_body_port = 9;
 int const servo_lidar_port = 10;
 
-int const lidarMode = 4;
+int const lidarMode = 3;
 
 float distance = 0;
 
